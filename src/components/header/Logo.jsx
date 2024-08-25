@@ -66,11 +66,12 @@ export default function Logo() {
         <span
           className="d-none d-lg-block"
           style={{
-            textShadow: "5px 5px 15px gray",
+            
             fontSize: "30px",
             marginLeft: "10px",
             marginRight: "10px",
-            color: "rgb(53, 56, 140)",
+            // color: "rgb(53, 56, 140)",
+            color: "white",
             fontWeight: "bold"
           }}
         > SVL India 
@@ -78,7 +79,9 @@ export default function Logo() {
       </div>
       <i
         className="bi bi-list toggle-sidebar-btn"
-        style={{ color: "White", textShadow: "5px 5px 10px darkorange" }}
+        style={{ color: "White",
+          //  textShadow: "5px 5px 10px darkorange"
+           }}
         onClick={handleToggleSideBar}
       ></i>
     </div>

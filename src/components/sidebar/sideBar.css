@@ -21,14 +21,14 @@
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #aab7cf transparent;
-  box-shadow: 0px 0px 20px rgba(255, 140, 0, 0.5); /* Dark Orange Shadow */
+  box-shadow: 0px 0px 20px grey; /* Dark Orange Shadow */
   background-color: #fff;
   font-family: 'Roboto', sans-serif;
 }
 
 /* Animation for shadow */
 .sidebar:hover {
-  box-shadow: 0px 0px 30px rgba(255, 140, 0, 0.7); /* Dark Orange Shadow on Hover */
+  /* box-shadow: 0px 0px 30px rgba(255, 140, 0, 0.7);  */
   transition: box-shadow 0.3s ease-in-out;
 }
 
@@ -38,7 +38,8 @@
   align-items: center;
   font-size: 15px;
   font-weight: 600;
-  color: darkorange;
+  /* color: darkorange; */
+  color: black;
   background: #f6f9ff;
   padding: 10px 15px;
   border-radius: 4px;
@@ -49,8 +50,8 @@
 
 /* Animation for Button/Link shadow */
 .sidebar-nav .nav-link:hover {
-  color: #fff;
-  background: darkorange;
+  color: black;
+  background: whitesmoke;
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* Darker shadow on hover */
   transform: translateY(-2px);
   animation: hover-effect 0.3s ease-in-out forwards;
@@ -69,12 +70,12 @@
 .sidebar-nav .nav-link i {
   font-size: 16px;
   margin-right: 10px;
-  color: #899bbd;
+  color: #0004fd;
   transition: color 0.3s ease-in-out;
 }
 
 .sidebar-nav .nav-link:hover i {
-  color: #fff;
+  color: #0026ff;
 }
 
 .sidebar-nav .nav-link .collapsed {
@@ -108,9 +109,9 @@
 
 
 .sidebar-nav .nav-content a:hover {
-  color: #fff;
-  background: #aab7cf;
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* Darker shadow on hover */
+  color: black;
+  background: #c1cada;
+  /* box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);  */
   transform: translateY(-2px);
   animation: link-hover-effect 0.3s ease-in-out forwards;
   border-radius: 3%;
