@@ -6,29 +6,22 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function SideBar() {
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1199);
 
   const handleToggleSideBar = () => {
-    document.body.classList.toggle("toggle-sidebar");
-    setIsSidebarOpen(!isSidebarOpen);
+    if (window.innerWidth < 1199) {
+      document.body.classList.toggle("toggle-sidebar");
+    }
   };
 
   const handleResize = () => {
-    if (window.innerWidth < 1199) {
-      if (isSidebarOpen) {
-        document.body.classList.add("toggle-sidebar");
-        setIsSidebarOpen(false);
-      }
-    } else {
-      if (!isSidebarOpen) {
-        document.body.classList.remove("toggle-sidebar");
-        setIsSidebarOpen(true);
-      }
+    if (window.innerWidth >= 1199) {
+      // Ensure sidebar is open if the window is resized back to larger screens
+      document.body.classList.remove("toggle-sidebar");
     }
   };
 
   useEffect(() => {
-    // Initial check
+    // Call handleResize on component mount to check the initial window size
     handleResize();
 
     // Add resize event listener
@@ -36,7 +29,7 @@ export default function SideBar() {
 
     // Clean up the event listener on component unmount
     return () => window.removeEventListener('resize', handleResize);
-  }, [isSidebarOpen]);
+  }, []);
 
 
   return (
