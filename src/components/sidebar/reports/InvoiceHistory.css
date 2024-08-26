@@ -90,3 +90,49 @@ h4.text-center {
         font-size: 16px;
     }
 }
+
+.invoice-card {
+    position: relative; /* Ensure the card is positioned relative to its container */
+    overflow: hidden; /* To handle overflow of the bubble */
+  }
+  
+  .status-bubble {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap;
+    max-width: 100px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .days {
+    position: absolute;
+    top: 40px; /* Adjust positioning as needed */
+    right: 10px;
+    background-color: transparent; /* Background color */
+    color: red; /* Text color */
+    border-radius: 50%; /* Round shape */
+    padding: 5px 10px; /* Padding around the text */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px; /* Font size */
+    font-weight: bold; /* Font weight */
+    white-space: nowrap; /* Prevent text from wrapping */
+    max-width: 100px; /* Set a max width if needed */
+    text-align: center; /* Center the text horizontally */
+    overflow: hidden; /* Ensure it appears above the card container */
+  }
+
+  

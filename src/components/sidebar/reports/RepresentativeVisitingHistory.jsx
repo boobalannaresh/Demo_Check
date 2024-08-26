@@ -7,55 +7,6 @@ import 'react-datepicker/dist/react-datepicker.css';
 import norecordfound from "../../../images/norecordfound.gif";
 import "./RepresentativeVisitingHistory";
 
-// const retailerOptions = [
-//   'Star Lubricants Spares- K R Puram',
-//   'A R AUTOMBILES-SIRA',
-//   'ARB Automobile- Tmk',
-//   'ATN Automobiles- Turuvekere',
-// ].map((option) => ({ label: option, value: option }));
-
-// const dummyData = [
-//   {
-//     sl: '01',
-//     invoiceNo: '1234',
-//     date: '04-07-2024',
-//     retailerName: 'Star Lubricants Spares- K R Puram',
-//     gcin: 'SVLR-001',
-//     dsr: 'Bharath',
-//     product: 'Quartz 7000FUT.GF6 5W30 3X3.5L',
-//     segment: 'PCMO',
-//     category: 'Min',
-//     size: '3.5',
-//     sales: '31.5'
-//   },
-//   {
-//     sl: '02',
-//     invoiceNo: '1214',
-//     date: '05-07-2024',
-//     retailerName: 'Impex Automotives-Hoskote',
-//     gcin: 'SVLR-074',
-//     dsr: 'Bharath',
-//     product: 'Quartz 8000NFC 5W30 3X3.5L',
-//     segment: 'PCMO',
-//     category: 'FS',
-//     size: '3.5',
-//     sales: '105'
-//   },
-//   {
-//     sl: '03',
-//     invoiceNo: 'SVL-00409',
-//     date: '04-08-2024',
-//     retailerName: 'Diamond Automobiles-Anekal',
-//     gcin: 'SVLR-071',
-//     dsr: 'Prashanth',
-//     product: 'Hi-Perf 4T 500 15W50 5X2.5L',
-//     segment: 'MCO',
-//     category: 'FS',
-//     size: '2.5',
-//     sales: '105'
-//   }
-// ];
-
 export default function RepresentativeVisitingHistory() {
   const [dsrOptions, setDsrOptions] = useState([]);
   const [selectedDsr, setSelectedDsr] = useState(null);
@@ -79,30 +30,62 @@ export default function RepresentativeVisitingHistory() {
     fetchDsr();
   }, []);
 
-  const handleFilter = () => {
-    let filtered = [];
-
-    if (startDate && endDate) {
-      if (startDate > endDate) {
-        alert("Pick From Date cannot be later than Pick To Date.");
+  const handleFilter = async () => {
+    try {
+      // Step 1: Filter invoices by date range
+      let represent_visitingQuery = supabase.from('payment_reference').select('*').eq('repid', selectedDsr.value);
+  
+      if (startDate && endDate) {
+        if (new Date(startDate) > new Date(endDate)) {
+          alert("Pick From Date cannot be later than Pick To Date.");
+          return;
+        }
+        represent_visitingQuery = represent_visitingQuery.gte('updatedtime', new Date(startDate).toISOString()).lte('updatedtime', new Date(endDate).toISOString());
+        console.log("Date Range Filter Applied:", startDate, "to", endDate);
+      } else if (startDate) {
+        represent_visitingQuery = represent_visitingQuery.gte('updatedtime', new Date(startDate).toISOString());
+        console.log("Start Date Filter Applied:", startDate);
+      } else if (endDate) {
+        represent_visitingQuery = represent_visitingQuery.lte('updatedtime', new Date(endDate).toISOString());
+        console.log("End Date Filter Applied:", endDate);
+      }
+  
+      const { data: filteredRepresentVisiting, error: represent_visitingError } = await represent_visitingQuery;
+  
+      if (represent_visitingError) {
+        console.error('Error fetching filtered represent visiting:', represent_visitingError.message);
         return;
       }
-
-      filtered = filtered.filter(data => {
-        const dataDate = new Date(data.date.split('-').reverse().join('-'));
-        return dataDate >= startDate && dataDate <= endDate;
-      });
+  
+      if (!filteredRepresentVisiting || filteredRepresentVisiting.length === 0) {
+        console.warn('No Represent Visiting found for the selected date range.');
+        setFilteredData([]);
+        return;
+      }
+  
+      setFilteredData(filteredRepresentVisiting);
+      setFilterApplied(true);
+      console.log("Final Filtered Items Data:", filteredRepresentVisiting);
+  
+    } catch (error) {
+      console.error('Unexpected error during filtering:', error);
     }
-
-    setFilteredData(filtered);
-    setFilterApplied(true);
   };
 
   const handleReset = () => {
+    setSelectedDsr(null);
     setStartDate(null);
     setEndDate(null);
     setFilteredData([]);
     setFilterApplied(false);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-based
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`; // Change format as needed
   };
 
   const customSelectStyles = {
@@ -113,20 +96,6 @@ export default function RepresentativeVisitingHistory() {
         borderColor: !selectedDsr ? 'red' : provided.borderColor,
       },
     }),
-  };
-
-  useEffect(() => {
-    fetchSegments();
-  }, []);
-
-  const fetchSegments = async () => {
-    const { data: filteredData, error } = await supabase
-      .from('segment_master')
-      .select('*')
-      .eq('activestatus', 'Y'); // Filter active segments
-
-    if (error) console.error('Error fetching segments:', error.message);
-    else setFilteredData(filteredData);
   };
 
   return (
@@ -188,7 +157,7 @@ export default function RepresentativeVisitingHistory() {
               <Table striped bordered hover responsive className="sales-report-table">
                 <thead>
                   <tr>
-                    <th>Sl</th>
+                    <th>Date</th>
                     <th>Account</th>
                     <th>Punch In</th>
                     <th>Punch Out</th>
@@ -200,12 +169,12 @@ export default function RepresentativeVisitingHistory() {
                 <tbody>
                   {filteredData.map((data, index) => (
                     <tr key={index}>
-                      <td>{index + 1}</td>
-                      <td>{data.segmentname.trim()}</td>
-                      <td>{1}</td>
-                      <td>{2}</td>
-                      <td>{3}</td>
-                      <td>{2}</td>
+                      <td>{formatDate(data.updatedtime)}</td>
+                      <td>{data.retailershopname.trim()}</td>
+                      <td>{data.payid}</td>
+                      <td>{data.payid}</td>
+                      <td>{data.payref}</td>
+                      <td>{data.amount}</td>
                       <td>{3}</td>
                     </tr>
                   ))}

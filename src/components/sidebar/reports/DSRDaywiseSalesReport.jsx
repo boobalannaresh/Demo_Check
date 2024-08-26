@@ -7,48 +7,6 @@ import 'react-datepicker/dist/react-datepicker.css';
 import norecordfound from "../../../images/norecordfound.gif";
 import "./DSRDaywiseSalesReport.css";
 
-const dummyData = [
-  {
-    sl: '01',
-    invoiceNo: '1234',
-    date: '04-07-2024',
-    retailerName: 'Star Lubricants Spares- K R Puram',
-    gcin: 'SVLR-001',
-    dsr: 'Bharath',
-    product: 'Quartz 7000FUT.GF6 5W30 3X3.5L',
-    segment: 'PCMO',
-    category: 'Min',
-    size: '3.5',
-    sales: '31.5'
-  },
-  {
-    sl: '02',
-    invoiceNo: '1214',
-    date: '05-07-2024',
-    retailerName: 'Impex Automotives-Hoskote',
-    gcin: 'SVLR-074',
-    dsr: 'Bharath',
-    product: 'Quartz 8000NFC 5W30 3X3.5L',
-    segment: 'PCMO',
-    category: 'FS',
-    size: '3.5',
-    sales: '105'
-  },
-  {
-    sl: '03',
-    invoiceNo: 'SVL-00409',
-    date: '04-08-2024',
-    retailerName: 'Diamond Automobiles-Anekal',
-    gcin: 'SVLR-071',
-    dsr: 'Prashanth',
-    product: 'Hi-Perf 4T 500 15W50 5X2.5L',
-    segment: 'MCO',
-    category: 'FS',
-    size: '2.5',
-    sales: '105'
-  }
-];
-
 export default function DSRDaywiseSalesReport() {
   const [dsrOptions, setDsrOptions] = useState([]);
   const [selectedDsr, setSelectedDsr] = useState(null);
@@ -72,23 +30,98 @@ export default function DSRDaywiseSalesReport() {
     fetchDsr();
   }, []);
 
-  const handleFilter = () => {
-    let filtered = dummyData;
-
-    if (startDate && endDate) {
-      if (startDate > endDate) {
-        alert("Pick From Date cannot be later than Pick To Date.");
+  const handleFilter = async () => {
+    try {
+      // Step 1: Query for the visitors assigned to the representative
+      let represent_visitingQuery = supabase
+        .from('representassigned_master')
+        .select('visitorid, visitor, shopname, role')
+        .eq('representativeid', selectedDsr.value);
+  
+      // Fetch the result of represent_visitingQuery
+      const { data: representVisitingData, error: representVisitingError } = await represent_visitingQuery;
+  
+      if (representVisitingError) {
+        console.error('Error fetching represent visiting data:', representVisitingError.message);
         return;
       }
-
-      filtered = filtered.filter(data => {
-        const dataDate = new Date(data.date.split('-').reverse().join('-'));
-        return dataDate >= startDate && dataDate <= endDate;
+  
+      if (!representVisitingData || representVisitingData.length === 0) {
+        console.warn('No represent visiting data found.');
+        setFilteredData([]);
+        return;
+      }
+  
+      const retailerIdArray = representVisitingData.map(invoice => invoice.visitorid);
+  
+      // Step 2: Filter invoices by date range
+      let invoiceQuery = supabase.from('invoices').select('*').in('retailerid', retailerIdArray);
+  
+      if (startDate && endDate) {
+        if (new Date(startDate) > new Date(endDate)) {
+          alert("Pick From Date cannot be later than Pick To Date.");
+          return;
+        }
+        invoiceQuery = invoiceQuery
+          .gte('updatedtime', new Date(startDate).toISOString())
+          .lte('updatedtime', new Date(endDate).toISOString());
+        console.log("Date Range Filter Applied:", startDate, "to", endDate);
+      } else if (startDate) {
+        invoiceQuery = invoiceQuery.gte('updatedtime', new Date(startDate).toISOString());
+        console.log("Start Date Filter Applied:", startDate);
+      } else if (endDate) {
+        invoiceQuery = invoiceQuery.lte('updatedtime', new Date(endDate).toISOString());
+        console.log("End Date Filter Applied:", endDate);
+      }
+  
+      const { data: filteredInvoices, error: invoiceError } = await invoiceQuery;
+  
+      if (invoiceError) {
+        console.error('Error fetching filtered invoices:', invoiceError.message);
+        return;
+      }
+  
+      if (!filteredInvoices || filteredInvoices.length === 0) {
+        console.warn('No invoices found for the selected date range.');
+        setFilteredData([]);
+        return;
+      }
+  
+      // Step 3: Calculate total liters by date
+      const totalsByDate = {};
+  
+      filteredInvoices.forEach((record) => {
+        const date = new Date(record.updatedtime).toISOString().split('T')[0]; // Get date in 'YYYY-MM-DD' format
+        const { totalliters } = record;
+  
+        // Initialize date entry if not present
+        if (!totalsByDate[date]) {
+          totalsByDate[date] = 0;  // Initialize totalliters to 0 for this date
+        }
+  
+        // Add totalliters to the total for the date
+        totalsByDate[date] += totalliters;
       });
+  
+      // Update state with calculated totals
+      setFilteredData(totalsByDate);
+      setFilterApplied(true);
+  
+      console.log("Final Filtered Totals by Date:", totalsByDate);
+  
+    } catch (error) {
+      console.error('Unexpected error during filtering:', error);
     }
-
-    setFilteredData(filtered);
-    setFilterApplied(true);
+  };
+  
+  
+  
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-based
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`; // Change format as needed
   };
 
   const handleReset = () => {
@@ -107,20 +140,6 @@ export default function DSRDaywiseSalesReport() {
         borderColor: !selectedDsr ? 'red' : provided.borderColor,
       },
     }),
-  };
-
-  useEffect(() => {
-    fetchSegments();
-  }, []);
-
-  const fetchSegments = async () => {
-    const { data: filteredData, error } = await supabase
-      .from('segment_master')
-      .select('*')
-      .eq('activestatus', 'Y'); // Filter active segments
-
-    if (error) console.error('Error fetching segments:', error.message);
-    else setFilteredData(filteredData);
   };
 
   return (
@@ -187,10 +206,16 @@ export default function DSRDaywiseSalesReport() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredData.map((data, index) => (
+                  {/* {filteredData.map((data, index) => (
                     <tr key={index}>
                       <td>{index + 1}</td>
                       <td>{data.segmentname.trim()}</td>
+                    </tr>
+                  ))} */}
+                  {Object.keys(filteredData).map((date, index) => (
+                    <tr key={index}>
+                      <td>{formatDate(date)}</td>
+                      <td>{filteredData[date]}</td>
                     </tr>
                   ))}
                 </tbody>

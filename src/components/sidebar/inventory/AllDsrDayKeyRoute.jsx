@@ -39,9 +39,30 @@ export default function AllDsrDayKeyRoute() {
     fetchDays();
   }, []);
 
-  const handleFilter = () => {
-    let filtered = [];
-    setFilteredData(filtered);
+  const handleFilter = async () => {
+    try {
+      // Fetch all records for the selected retailer
+      const { data: allDsrDetails, error: dsrError } = await supabase
+        .from('representassigned_master')
+        .select('*')
+        .eq('representativeid', selectedDsr.value)
+        .eq('visitingdayid', selectedDay.value);
+  
+      if (dsrError) {
+        console.error('Error fetching representative details:', dsrError);
+        return;
+      }
+  
+      console.log("All Requests for Representative:", allDsrDetails);
+  
+      // Set the filtered items data to state
+      setFilteredData(allDsrDetails || []);
+      // setFilterApplied(true);
+      console.log("Final Filtered Items Data:", allDsrDetails);
+  
+    } catch (error) {
+      console.error('Unexpected error during filtering:', error);
+    }
   };
 
   const handleReset = () => {
@@ -61,11 +82,10 @@ export default function AllDsrDayKeyRoute() {
     }),
   };
 
-
   return (
     <main id='main' className='main'>
- <Container className="mt-4">
- <Row className="mb-4">
+      <Container className="mt-4">
+      <Row className="mb-4">
           <Col>
             <h4 className="text-center">All DSR Day Key Route </h4>
           </Col>
@@ -112,6 +132,7 @@ export default function AllDsrDayKeyRoute() {
               <tr>
                 <th>SL</th>
                 <th>Account</th>
+                <th>Role</th>
                 <th>Visiting Day</th>
                 <th>Action</th>
               </tr>
@@ -120,8 +141,9 @@ export default function AllDsrDayKeyRoute() {
               {filteredData.map((data, index) => (
                 <tr key={data.id}>
                   <td>{index + 1}</td>
-                  <td>{data.account}</td>
-                  <td>{data.visitingDay}</td>
+                  <td>{data.shopname}</td>
+                  <td>{data.role}</td>
+                  <td>{data.visitingday}</td>
                   <td>
                     <Button variant="warning" size="sm" onClick={()=> navigate("/portal/retailer-summary")}>Details</Button>
                   </td>

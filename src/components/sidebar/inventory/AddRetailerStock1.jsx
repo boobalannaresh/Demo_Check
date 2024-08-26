@@ -3,7 +3,7 @@ import "./addRetailerStock.css";
 import { Form, Button, Container, Row, Col, Table } from 'react-bootstrap';
 import Select from 'react-select';
 import { supabase } from '../../../supabaseClient';
-// import { Category } from '@mui/icons-material';
+import { Category } from '@mui/icons-material';
 
 export default function AddRetailerStock() {
   const [retailers, setRetailers] = useState([]);
@@ -231,7 +231,7 @@ export default function AddRetailerStock() {
                     segmentid: item.segmentid,
                     segmentname: item.segmentname,
                     itemweight: item.itemweight,
-                    noofboxes: item.calculatednoofboxes,
+                    noofboxes: item.calculatedTotalLitres,
                     noofitemsinbox: item.noofitemsinbox,
                     price: item.price,
                     qty: item.qty,
